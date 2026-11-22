@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pstack Architecture & Philosophy Explorer</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --background: #f8fafc;
+      --content: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --card-border: #e2e8f0;
+      --foreground: #0f172a;
+      --muted-foreground: #475569;
+      --placeholder: #94a3b8;
+      --code-foreground: #0f172a;
+      --primary: #2563eb;
+      --primary-foreground: #ffffff;
+      --secondary: #e2e8f0;
+      --secondary-foreground: #0f172a;
+      --success: #16a34a;
+      --warning: #d97706;
+      --error: #dc2626;
+      --chart-1: #2563eb;
+      --chart-2: #0d9488;
+      --chart-3: #7c3aed;
+      --chart-4: #d97706;
+      --chart-5: #e11d48;
+      --chart-6: #4f46e5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #0b0f19;
+        --content: #111827;
+        --card: #161e2e;
+        --border: #263145;
+        --card-border: #263145;
+        --foreground: #f1f5f9;
+        --muted-foreground: #94a3b8;
+        --placeholder: #64748b;
+        --code-foreground: #e2e8f0;
+        --primary: #3b82f6;
+        --primary-foreground: #ffffff;
+        --secondary: #1e293b;
+        --secondary-foreground: #f1f5f9;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --error: #f87171;
+        --chart-1: #60a5fa;
+        --chart-2: #2dd4bf;
+        --chart-3: #a78bfa;
+        --chart-4: #fbbf24;
+        --chart-5: #fb7185;
+        --chart-6: #818cf8;
+      }
+    }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .tab-btn[aria-selected="true"] {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+    }
+    .pill-btn[aria-pressed="true"] {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+    }
+    .pyramid-layer {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .pyramid-layer:hover {
+      transform: translateY(-1px);
+    }
+    .pyramid-layer[data-active="true"] {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    .check-done {
+      text-decoration: line-through;
+      opacity: 0.65;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased m-0 p-0">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Header -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="px-2 py-0.5 text-xs font-mono rounded-md bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">pstack v0.15.46</span>
+          <span class="px-2 py-0.5 text-xs rounded-md bg-[var(--content)] text-[var(--muted-foreground)] border border-[var(--border)]">Lauren Tan (@poteto) · SpaceXSI</span>
+        </div>
+        <h1 class="text-xl font-semibold tracking-tight text-[var(--foreground)]">pstack Engineering Philosophy &amp; Solo Adaptation Explorer</h1>
+        <p class="text-xs sm:text-sm text-[var(--muted-foreground)]">
+          "If you want to go fast, go deep first." — Interactive map of <code class="font-mono text-[var(--code-foreground)]">pstack/</code> + <em>All Code Is Slop (Except Mine)</em> for solo CLI, backend &amp; web/app builders across mixed harnesses.
+        </p>
+      </div>
+      <div class="grid grid-cols-4 gap-2 shrink-0 text-center">
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg px-3 py-2">
+          <div class="text-base font-semibold tabular-nums" style="color: var(--chart-1)">34</div>
+          <div class="text-xs text-[var(--muted-foreground)]">Skills</div>
+        </div>
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg px-3 py-2">
+          <div class="text-base font-semibold tabular-nums" style="color: var(--chart-2)">24</div>
+          <div class="text-xs text-[var(--muted-foreground)]">Principles</div>
+        </div>
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg px-3 py-2">
+          <div class="text-base font-semibold tabular-nums" style="color: var(--chart-3)">22</div>
+          <div class="text-xs text-[var(--muted-foreground)]">Playbooks</div>
+        </div>
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg px-3 py-2">
+          <div class="text-base font-semibold tabular-nums" style="color: var(--chart-4)">2</div>
+          <div class="text-xs text-[var(--muted-foreground)]">Subagents</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Primary Navigation Tabs -->
+    <nav class="flex flex-wrap gap-2" role="tablist" aria-label="Explorer sections">
+      <button class="tab-btn px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] cursor-pointer" role="tab" aria-selected="true" data-tab="pyramid">
+        1. Inverse Pyramid &amp; Talk
+      </button>
+      <button class="tab-btn px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] cursor-pointer" role="tab" aria-selected="false" data-tab="workflow">
+        2. Directory by Workflow Steps
+      </button>
+      <button class="tab-btn px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] cursor-pointer" role="tab" aria-selected="false" data-tab="principles">
+        3. 24 SE Principles
+      </button>
+      <button class="tab-btn px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] cursor-pointer" role="tab" aria-selected="false" data-tab="adapt">
+        4. Solo &amp; Multi-Harness Planner
+      </button>
+    </nav>
+
+    <!-- TAB 1: INVERSE PYRAMID & TALK -->
+    <section id="tab-pyramid" class="space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- Interactive Inverted Pyramid -->
+        <div class="lg:col-span-6 bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base font-semibold">The Inverse Pyramid of Trust</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">Click a layer to see talk evidence, <code class="font-mono">pstack</code> counterparts, and solo actions.</p>
+            </div>
+            <span class="text-xs text-[var(--muted-foreground)] font-mono">Lower = Higher Cost ↓</span>
+          </div>
+
+          <div id="pyramid-stack" class="flex flex-col items-center gap-2.5 pt-2">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div class="pt-2 border-t border-[var(--border)] grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div class="bg-[var(--content)] rounded-lg p-2.5 border border-[var(--border)]">
+              <div class="text-sm font-semibold tabular-nums">11,000/mo</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Team PRs (Oct)</div>
+            </div>
+            <div class="bg-[var(--content)] rounded-lg p-2.5 border border-[var(--border)]">
+              <div class="text-sm font-semibold tabular-nums" style="color: var(--success)">~0.5%</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Revert Rate</div>
+            </div>
+            <div class="bg-[var(--content)] rounded-lg p-2.5 border border-[var(--border)]">
+              <div class="text-sm font-semibold tabular-nums" style="color: var(--chart-3)">~70%</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Tokens on Verify</div>
+            </div>
+            <div class="bg-[var(--content)] rounded-lg p-2.5 border border-[var(--border)]">
+              <div class="text-sm font-semibold tabular-nums" style="color: var(--warning)">65k → 1.2k</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Comments Cut</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer Detail Inspector -->
+        <div id="pyramid-detail" class="lg:col-span-6 bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 flex flex-col justify-between space-y-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Codebase as a Garden Case Study -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-3">
+        <h3 class="text-sm font-semibold">Why "Codebase as a Garden" Matters: The Talk's Timer Spread Case Study</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-3.5 space-y-1">
+            <div class="font-mono font-semibold" style="color: var(--warning)">Sep 9 — The First Weed</div>
+            <p class="text-[var(--muted-foreground)]">An agent patched a UI flicker with <code class="font-mono text-[var(--code-foreground)]">setTimeout</code> and wrote a long comment justifying why a proper architectural fix was too large.</p>
+          </div>
+          <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-3.5 space-y-1">
+            <div class="font-mono font-semibold" style="color: var(--error)">Oct 3 — Pattern Promoted</div>
+            <p class="text-[var(--muted-foreground)]">Later agents saw the commented workaround as the "established convention" and copied it into a shared module.</p>
+          </div>
+          <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-3.5 space-y-1">
+            <div class="font-mono font-semibold" style="color: var(--error)">Oct 17 — 183 Timers &amp; GC Jank</div>
+            <p class="text-[var(--muted-foreground)]">Rapid timer creation/destruction triggered heavy GC pauses. Fix: ban workaround comments + enforce a lint rule pointing agents to the real root-cause API.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: DIRECTORY BY WORKFLOW STEPS -->
+    <section id="tab-workflow" class="hidden space-y-4">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold">Directory Separation by Engineering Workflow Stage</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">Every skill, playbook, subagent, tool, and automation pack inside <code class="font-mono">pstack/</code> organized into 7 lifecycle stages.</p>
+          </div>
+          <input id="wf-search" type="search" placeholder="Filter skills, playbooks, paths..." class="px-3 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] placeholder:text-[var(--placeholder)] w-full sm:w-64" />
+        </div>
+        <div id="wf-pills" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <div id="wf-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </section>
+
+    <!-- TAB 3: 24 SE PRINCIPLES -->
+    <section id="tab-principles" class="hidden space-y-4">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold">The 24 Software Engineering Principles</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">Stored as atomic skills in <code class="font-mono">pstack/skills/principle-*/SKILL.md</code>. Use their names as 3-word steering levers mid-session.</p>
+          </div>
+          <input id="pr-search" type="search" placeholder="Search principles or triggers..." class="px-3 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] placeholder:text-[var(--placeholder)] w-full sm:w-64" />
+        </div>
+        <div id="pr-pills" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <div id="pr-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    </section>
+
+    <!-- TAB 4: SOLO & MULTI-HARNESS PLANNER -->
+    <section id="tab-adapt" class="hidden space-y-5">
+      <!-- Surface Switcher -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold">Solo Surface Blueprint (CLI · Backend · Web/App)</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">Pick a project surface to inspect concrete guardrails, verification proofs, and reusable agent levers.</p>
+          </div>
+          <div id="surface-pills" class="flex flex-wrap gap-1.5"></div>
+        </div>
+        <div id="surface-detail" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+
+      <!-- Multi-Harness Matrix -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-3">
+        <div>
+          <h2 class="text-base font-semibold">Multi-Harness Translation Matrix</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">Keep Layers 1–3 (architecture, lint, verify scripts, feature maps) inside the repo so Cursor, Claude Code, Antigravity, and Codex all enforce the exact same bar.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                <th class="py-2 pr-3 font-medium">Capability</th>
+                <th class="py-2 px-3 font-medium">Cursor</th>
+                <th class="py-2 px-3 font-medium">Claude Code</th>
+                <th class="py-2 px-3 font-medium">Antigravity</th>
+                <th class="py-2 pl-3 font-medium">Codex</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              <tr>
+                <td class="py-2.5 pr-3 font-medium">Repo Instructions</td>
+                <td class="py-2.5 px-3"><code class="font-mono">.cursor/rules/*.mdc</code></td>
+                <td class="py-2.5 px-3"><code class="font-mono">CLAUDE.md</code> → <code class="font-mono">AGENTS.md</code></td>
+                <td class="py-2.5 px-3"><code class="font-mono">AGENTS.md</code> + Skills</td>
+                <td class="py-2.5 pl-3"><code class="font-mono">AGENTS.md</code></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 font-medium">Skill Invocation</td>
+                <td class="py-2.5 px-3"><code class="font-mono">/poteto-mode</code> (Alt/Opt+Enter sticky)</td>
+                <td class="py-2.5 px-3"><code class="font-mono">/pstack:poteto-mode</code></td>
+                <td class="py-2.5 px-3">Saved Skills + <code class="font-mono">/plan</code>, <code class="font-mono">/goal</code></td>
+                <td class="py-2.5 pl-3">Reference skill file in prompt</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 font-medium">Fresh Subagents</td>
+                <td class="py-2.5 px-3"><code class="font-mono">Task</code> (<code class="font-mono">poteto-agent</code>)</td>
+                <td class="py-2.5 px-3"><code class="font-mono">Agent</code> + <code class="font-mono">isolation: worktree</code></td>
+                <td class="py-2.5 px-3"><code class="font-mono">invoke_subagent</code></td>
+                <td class="py-2.5 pl-3">Parallel git worktrees</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 font-medium">Cross-Model Review</td>
+                <td class="py-2.5 px-3"><code class="font-mono">/interrogate</code> 3-model panel</td>
+                <td class="py-2.5 px-3">Fresh verifier agent (separate from author)</td>
+                <td class="py-2.5 px-3">Run fresh review against <code class="font-mono">git diff main</code></td>
+                <td class="py-2.5 pl-3">Review branch authored in another harness</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 pr-3 font-medium">Layers 1–3 Checks</td>
+                <td colspan="4" class="py-2.5 px-3 text-[var(--muted-foreground)]">Identical across all four: strict types, import-boundary lint, <code class="font-mono text-[var(--code-foreground)]">scripts/verify-ctl</code>, <code class="font-mono text-[var(--code-foreground)]">docs/verification/features/*.md</code>, and CI doc-drift checks.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Interactive 5-Stage Solo Rollout Checklist -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-semibold">5-Stage Solo Adoption Checklist</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">Check off milestones as you harden your projects. Never automate Stage 5 until Stages 1–3 are solid.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="progress-label" class="text-xs font-mono tabular-nums text-[var(--muted-foreground)]">0 / 10 completed</span>
+            <button id="reset-checks" class="px-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] cursor-pointer">Reset</button>
+          </div>
+        </div>
+        <div class="w-full h-2 rounded-full bg-[var(--content)] overflow-hidden border border-[var(--border)]">
+          <div id="progress-bar" class="h-full transition-all duration-200" style="width: 0%; background: var(--primary);"></div>
+        </div>
+        <div id="checklist-items" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ---------- DATA ----------
+    const PYRAMID_LAYERS = [
+      {
+        id: 1,
+        name: "Layer 1: Code & Architecture",
+        tag: "Deterministic · Widest Impact",
+        width: "100%",
+        color: "var(--chart-1)",
+        summary: "Shape APIs, data structures, and directory boundaries so agents write the right thing by default.",
+        talkExamples: [
+          "Dune (Next.js-like Electron framework) encodes desktop lessons directly in framework APIs.",
+          "Banned React's useEffect in ordinary product code; permitted only inside narrow Dune internals.",
+          "Top-level electron-main/, electron-renderer/, and shared/ directories communicate architectural boundaries to agents from the filesystem alone."
+        ],
+        pstackLinks: [
+          "/architect — settle data shapes & boundaries before writing code",
+          "/correct — level 1 fix: make repeat mistakes structurally impossible",
+          "principle-foundational-thinking, principle-model-the-domain, principle-boundary-discipline, principle-migrate-callers-then-delete-legacy-apis"
+        ],
+        soloAction: "Separate cli/, domain/, repos/, ui/, and shared/ cleanly. Delete legacy patterns immediately so agents never copy old weeds."
+      },
+      {
+        id: 2,
+        name: "Layer 2: Static Checks, Lint & CI",
+        tag: "Deterministic · Automatic Rejection",
+        width: "86%",
+        color: "var(--chart-2)",
+        summary: "Turn every repeated human review comment into a compiler error, lint rule with fix guidance, or behavior test.",
+        talkExamples: [
+          "Dependency-graph analyzer + lint rules ban cross-process imports (even type imports) between main and renderer.",
+          "Cut code comments from 65,824 → 1,227 (~99% ban) so agents can't justify hacks with prose.",
+          "Lint error messages explicitly instruct the agent on the root-cause API to use instead."
+        ],
+        pstackLinks: [
+          "/no-comments + Comment Sicko subagent — strips workaround sermons & unsafe suppressions",
+          "/tdd & /typescript-best-practices — strict types & behavior-focused tests",
+          "scripts/check-pstack-docs.mjs — deterministic CI check preventing doc drift",
+          "principle-type-system-discipline, principle-encode-lessons-in-structure"
+        ],
+        soloAction: "Add import-boundary lint, strict TS/compiler checks, and a small CI doc/schema check. Ban @ts-ignore and workaround comments."
+      },
+      {
+        id: 3,
+        name: "Layer 3: Verification (Runtime & Formal)",
+        tag: "High-Signal Proof · ~70% of Tokens",
+        width: "72%",
+        color: "var(--chart-3)",
+        summary: "Give agents the tools to run your real app, capture artifacts (videos, snapshots, traces), and formally check critical invariants.",
+        talkExamples: [
+          "Runtime verification via Chrome DevTools Protocol (CDP), user-POV Feature Maps, and reusable control CLIs.",
+          "TLA+ model checking for multi-device notifications; Lean proofs for flicker-free virtualization; Bombadil for property-based UI fuzzing.",
+          "~70% of daily token budget goes to verifying patches rather than generating them."
+        ],
+        pstackLinks: [
+          "/create-verification-skill & /maintain-verification-skill — generates verify-<app> + Feature Map",
+          "/create-formal-verification-skill, /maintain-formal-verification-skill, /statechart — TLA+ to Mermaid bug paths",
+          "/benchmark-checklist & /interrogate — scientific perf vetting & adversarial proof-only review",
+          "principle-prove-it-works, principle-explain-the-number"
+        ],
+        soloAction: "Build a reusable verify-ctl script + Feature Map covering CLI commands, API read-backs, and ARIA-driven browser flows."
+      },
+      {
+        id: 4,
+        name: "Layer 4: Prose (Rules, Skills, AGENTS.md)",
+        tag: "Non-Deterministic · Judgment Only",
+        width: "58%",
+        color: "var(--chart-4)",
+        summary: "Keep prose thin and focused strictly on workflow judgment that compilers and tests cannot express.",
+        talkExamples: [
+          "Warns against stuffing AGENTS.md every time an agent errs—prose carries no guarantee of execution.",
+          "Agents can over-rotate on prose rules or write markdown justifications instead of fixing root causes."
+        ],
+        pstackLinks: [
+          "/poteto-mode & 22 playbooks — structured workflow routing",
+          "24 principle-* skills — concise mid-session steering vocabulary",
+          "/automate-me, /reflect, /unslop, /technical-writing, eval playbook"
+        ],
+        soloAction: "Keep one short canonical AGENTS.md with a Rule → Enforcer table. Promote any prose rule violated twice up to Layer 1 or 2."
+      },
+      {
+        id: 5,
+        name: "Layer 5: Human Review",
+        tag: "Narrowest · Most Expensive",
+        width: "44%",
+        color: "var(--chart-5)",
+        summary: "Spend your finite attention reviewing proof artifacts, statecharts, decision logs, and irreversible product calls.",
+        talkExamples: [
+          "Shifted from reviewing 3 PRs/day line-by-line to overseeing ~300 PRs/day via videos, screenshots, and statecharts.",
+          "Only automate outer loops (release fuzzers / autonomous PRs) once Layers 1–3 make the inner loop trustworthy."
+        ],
+        pstackLinks: [
+          "/show-me-your-work — TSV decision trail + cross-model Attention summary",
+          "/ketchup & /ketchup-video — fast catch-up listing pending decisions",
+          "Shipping, Autopilot-stack & Autopilot-full playbooks (author ≠ verifier)"
+        ],
+        soloAction: "Review videos/snapshots/decision logs before reading raw diffs. Keep human-in-the-loop merge (autopilot-stack) until verification is rock solid."
+      }
+    ];
+
+    const WORKFLOW_ITEMS = [
+      // Stage 0
+      { stage: "0. Entry & Routing", type: "Skill", name: "/poteto-mode", path: "skills/poteto-mode/SKILL.md", desc: "Master router: matches task to 1 of 22 playbooks, opens todo list, enforces non-negotiables & model roles." },
+      { stage: "0. Entry & Routing", type: "Contract", name: "worker.md", path: "skills/poteto-mode/worker.md", desc: "Mandatory first-line contract injected into every spawned subagent or worker." },
+      { stage: "0. Entry & Routing", type: "Subagent", name: "poteto-agent", path: "agents/poteto-agent.md", desc: "Delegate wrapper ensuring every fresh subagent reads poteto-mode + all 24 principles before coding." },
+      { stage: "0. Entry & Routing", type: "Skill", name: "/setup-pstack", path: "skills/setup-pstack/SKILL.md", desc: "Detects available models, sets budget tier, writes pstack-models rule per role." },
+      { stage: "0. Entry & Routing", type: "Skill", name: "/poteto-help", path: "skills/poteto-help/SKILL.md", desc: "Read-only guide that recommends the right skill/playbook and drafts a prompt without running it." },
+
+      // Stage 1
+      { stage: "1. Understand & Frame", type: "Skill", name: "/how", path: "skills/how/SKILL.md", desc: "Traces live code paths to walk through how a subsystem actually works." },
+      { stage: "1. Understand & Frame", type: "Skill", name: "/why", path: "skills/why/SKILL.md", desc: "Explains design rationale from git commits, PR discussions, and records (separating citations from inference)." },
+      { stage: "1. Understand & Frame", type: "Skill", name: "/teach", path: "skills/teach/SKILL.md", desc: "Combines /how + /why into a diagram-by-diagram plain explanation." },
+      { stage: "1. Understand & Frame", type: "Skill", name: "/recall", path: "skills/recall/SKILL.md", desc: "Reconstructs recent working context from chat history and repo records." },
+      { stage: "1. Understand & Frame", type: "Skill", name: "/in-your-own-words", path: "skills/in-your-own-words/SKILL.md", desc: "Plays back your goal and problem before any code is edited." },
+      { stage: "1. Understand & Frame", type: "Skill", name: "/sharpen", path: "skills/sharpen/SKILL.md", desc: "Rewrites your prompt to be deeper (expert methods + outside check) without executing it." },
+      { stage: "1. Understand & Frame", type: "Playbook", name: "investigation", path: "skills/poteto-mode/playbooks/investigation.md", desc: "Read-only architectural or codebase question." },
+      { stage: "1. Understand & Frame", type: "Playbook", name: "runtime-forensics", path: "skills/poteto-mode/playbooks/runtime-forensics.md", desc: "Diagnose live symptoms (leaks, CPU spins, glitches) via instrumentation." },
+      { stage: "1. Understand & Frame", type: "Playbook", name: "trace-forensics", path: "skills/poteto-mode/playbooks/trace-forensics.md", desc: "Diagnose captured profiles (.cpuprofile, traces, spindumps, heap snapshots)." },
+
+      // Stage 2
+      { stage: "2. Design & Explore", type: "Skill", name: "/architect", path: "skills/architect/SKILL.md", desc: "Settles caller usage, data shapes, types, and module boundaries before writing code." },
+      { stage: "2. Design & Explore", type: "Skill", name: "/arena", path: "skills/arena/SKILL.md", desc: "Runs N competing attempts on the same brief across models, picks a base, and grafts the best parts." },
+      { stage: "2. Design & Explore", type: "Skill", name: "/swarm", path: "skills/swarm/SKILL.md", desc: "Fans out N parallel workers across independent slices or race arms and aggregates one report." },
+      { stage: "2. Design & Explore", type: "Skill", name: "/blast-radius", path: "skills/blast-radius/SKILL.md", desc: "Finds what a small diff could break elsewhere and proves safety by running real code." },
+      { stage: "2. Design & Explore", type: "Skill", name: "/figure-it-out", path: "skills/figure-it-out/SKILL.md", desc: "Designs a custom auditable playbook when no bundled playbook fits." },
+      { stage: "2. Design & Explore", type: "Playbook", name: "prototype", path: "skills/poteto-mode/playbooks/prototype.md", desc: "Throwaway runnable sketch to settle empirical or UX forks cheaply." },
+      { stage: "2. Design & Explore", type: "Playbook", name: "multi-phase-plan", path: "skills/poteto-mode/playbooks/multi-phase-plan.md", desc: "Structures multi-phase or stacked-PR work with verifiable milestones." },
+      { stage: "2. Design & Explore", type: "Playbook", name: "refactoring", path: "skills/poteto-mode/playbooks/refactoring.md", desc: "Behavior-preserving structural improvement." },
+
+      // Stage 3
+      { stage: "3. Build & Clean", type: "Skill", name: "/tdd", path: "skills/tdd/SKILL.md", desc: "Failing test first, then fix—only when a cheap, high-signal local test path exists." },
+      { stage: "3. Build & Clean", type: "Skill", name: "/typescript-best-practices", path: "skills/typescript-best-practices/SKILL.md", desc: "Concrete TS patterns: branded primitives, discriminated unions, boundary parsing." },
+      { stage: "3. Build & Clean", type: "Skill", name: "/no-comments", path: "skills/no-comments/SKILL.md", desc: "Spawns Comment Sicko, removes workaround comments, fixes root causes, encodes constraints." },
+      { stage: "3. Build & Clean", type: "Subagent", name: "comment-sicko", path: "agents/comment-sicko.md", desc: "Read-only adversarial comment hunter that flags workaround code as MUST KILL." },
+      { stage: "3. Build & Clean", type: "Skill", name: "/unslop", path: "skills/unslop/SKILL.md", desc: "Strips AI writing tells from replies, docs, and commit/PR text." },
+      { stage: "3. Build & Clean", type: "Skill", name: "/technical-writing", path: "skills/technical-writing/SKILL.md", desc: "Diátaxis + Google Developer Style + STE + Global English doc standard." },
+      { stage: "3. Build & Clean", type: "Playbook", name: "feature", path: "skills/poteto-mode/playbooks/feature.md", desc: "New or changed behavior built from a named data shape." },
+      { stage: "3. Build & Clean", type: "Playbook", name: "bug-fix", path: "skills/poteto-mode/playbooks/bug-fix.md", desc: "Reproduce first, trace root cause, fix, and prove with runtime evidence." },
+      { stage: "3. Build & Clean", type: "Playbook", name: "perf-issue", path: "skills/poteto-mode/playbooks/perf-issue.md", desc: "Trace measured slowness and prove speedup against baseline." },
+      { stage: "3. Build & Clean", type: "Playbook", name: "hillclimb", path: "skills/poteto-mode/playbooks/hillclimb.md", desc: "Iterative hypothesis-driven metric optimization (1 commit per verified win)." },
+      { stage: "3. Build & Clean", type: "Playbook", name: "visual-parity", path: "skills/poteto-mode/playbooks/visual-parity.md", desc: "Pixel-exact UI equivalence diffed against a frozen screenshot baseline." },
+
+      // Stage 4
+      { stage: "4. Verify & Prove", type: "Skill", name: "/create-verification-skill", path: "skills/create-verification-skill/SKILL.md", desc: "Generates a project-local verify-<app> skill + user-POV Feature Map (includes browser + CLI example)." },
+      { stage: "4. Verify & Prove", type: "Skill", name: "/maintain-verification-skill", path: "skills/maintain-verification-skill/SKILL.md", desc: "Audits feature map drift via parallel source readers + one live verification pass." },
+      { stage: "4. Verify & Prove", type: "Skill", name: "/create-formal-verification-skill", path: "skills/create-formal-verification-skill/SKILL.md", desc: "Verifies hard-to-reach properties (races, retries, parsers) via TLA+, Lean, or code verifiers." },
+      { stage: "4. Verify & Prove", type: "Skill", name: "/maintain-formal-verification-skill", path: "skills/maintain-formal-verification-skill/SKILL.md", desc: "Re-syncs formal models after code changes and distinguishes drift from real bugs." },
+      { stage: "4. Verify & Prove", type: "Tool + Skill", name: "/statechart", path: "skills/statechart/SKILL.md", desc: "Runs TLC on TLA+ specs via bundled TS compiler (410 files) and renders Mermaid statecharts with bug paths." },
+      { stage: "4. Verify & Prove", type: "Skill", name: "/benchmark-checklist", path: "skills/benchmark-checklist/SKILL.md", desc: "7-question scientific audit vetting measured speedups/regressions." },
+      { stage: "4. Verify & Prove", type: "Skill", name: "/interrogate", path: "skills/interrogate/SKILL.md", desc: "Adversarial multi-model diff review keeping only bugs proven by running code." },
+
+      // Stage 5
+      { stage: "5. Ship & Scale", type: "Tool + Skill", name: "/show-me-your-work", path: "skills/show-me-your-work/SKILL.md", desc: "Append-only TSV decision trail (scripts/log.sh) + cross-model audit summary." },
+      { stage: "5. Ship & Scale", type: "Skill", name: "/ketchup & /ketchup-video", path: "skills/ketchup/SKILL.md", desc: "Read-only catch-up (text/visuals or subtitled slide video) listing pending human calls." },
+      { stage: "5. Ship & Scale", type: "Skill", name: "/bro", path: "skills/bro/SKILL.md", desc: "Restates dense technical output in plain, jargon-free human language." },
+      { stage: "5. Ship & Scale", type: "Playbook", name: "opening-a-pr", path: "skills/poteto-mode/playbooks/opening-a-pr.md", desc: "Small ordered commits, conventional title, briefing-style PR body with evidence." },
+      { stage: "5. Ship & Scale", type: "Tool + Playbook", name: "babysit + watch-pr", path: "skills/poteto-mode/playbooks/babysit.md", desc: "Watches PR via bundled TS CLI (scripts/watch-pr/), resolves conflicts/threads/CI to merge-ready." },
+      { stage: "5. Ship & Scale", type: "Playbook", name: "shipping", path: "skills/poteto-mode/playbooks/shipping.md", desc: "Fresh independent verifier per PR, then lands contiguous verified stack bottom-up." },
+      { stage: "5. Ship & Scale", type: "Playbook", name: "autonomous-run / autopilot-stack / autopilot-full", path: "skills/poteto-mode/playbooks/autopilot-stack.md", desc: "Overnight single-task loops, verified PR stacks for human merge, or full auto-merge queues." },
+      { stage: "5. Ship & Scale", type: "Tool + Playbook", name: "pause-safely / session-pickup / worktree-cleanup", path: "skills/poteto-mode/playbooks/worktree-cleanup.md", desc: "Clean WIP checkpointing, fresh-chat resume, and disk cleanup via scripts/worktree-audit.sh." },
+      { stage: "5. Ship & Scale", type: "Automation", name: "benny pack", path: "automations/benny/README.md", desc: "Dormant Cursor-only Slack automation: issue triage → live repro & draft fix with UI evidence." },
+
+      // Stage 6
+      { stage: "6. Compound & Harden", type: "Skill", name: "/correct", path: "skills/correct/SKILL.md", desc: "Mines repeat mistakes (≥2) and fixes them at the highest Trust Pyramid layer + maintains Rule→Enforcer table." },
+      { stage: "6. Compound & Harden", type: "Skill", name: "/reflect", path: "skills/reflect/SKILL.md", desc: "Mines current transcript for durable lessons and proposes targeted skill edits." },
+      { stage: "6. Compound & Harden", type: "Skill", name: "/automate-me", path: "skills/automate-me/SKILL.md", desc: "Mines workspace transcripts to draft your personal <name>-mode skill." },
+      { stage: "6. Compound & Harden", type: "Skill", name: "/make-bot-ui", path: "skills/make-bot-ui/SKILL.md", desc: "Builds a local/Tailscale webhook dashboard for Grok Bot routines." },
+      { stage: "6. Compound & Harden", type: "Playbook", name: "authoring-a-skill & eval", path: "skills/poteto-mode/playbooks/eval.md", desc: "Disciplined skill authoring + blinded A/B evaluation defeating the observer effect." },
+      { stage: "6. Compound & Harden", type: "CI Script", name: "check-pstack-docs.mjs & harness generator", path: "../scripts/check-pstack-docs.mjs", desc: "Repo-level deterministic CI guard for counts/links/models + Claude Code tree sync." }
+    ];
+
+    const PRINCIPLES = [
+      // Core (10)
+      { group: "Core", name: "Laziness Protocol", slug: "principle-laziness-protocol", rule: "Bias toward deletion and the smallest change that solves the problem; resist premature abstractions.", steer: "apply laziness protocol — delete the wrapper and inline the single caller.", surfaces: "All surfaces: smaller diffs mean fewer bugs & faster verification." },
+      { group: "Core", name: "Foundational Thinking", slug: "principle-foundational-thinking", rule: "Choose core types, data structures, and ownership before writing logic so downstream code becomes obvious.", steer: "apply foundational thinking — show me the core data shape first.", surfaces: "Backend/CLI: nail schemas & domain structs before command/route handlers." },
+      { group: "Core", name: "Redesign from First Principles", slug: "principle-redesign-from-first-principles", rule: "Integrate a new requirement as if it had been foundational from day one instead of bolting it on.", steer: "redesign from first principles rather than adding a boolean flag.", surfaces: "Web/Backend: prevents flag soup and fragile conditional branches." },
+      { group: "Core", name: "Attack the Premise", slug: "principle-attack-the-premise", rule: "When 2+ fixes sharing one assumption fail the same gate, stop and test the assumption directly.", steer: "attack the premise — list our assumptions and test the root one.", surfaces: "Debugging across CLI/Backend/UI when retries keep failing." },
+      { group: "Core", name: "Subtract Before You Add", slug: "principle-subtract-before-you-add", rule: "Remove dead code, obsolete adapters, and redundant validators first, then build on the simpler base.", steer: "subtract before you add — delete the old adapter first.", surfaces: "Solo repos: keeps the 'garden' clean so agents don't copy dead code." },
+      { group: "Core", name: "Minimize Reader Load", slug: "principle-minimize-reader-load", rule: "Count indirection layers and hidden mutable state; collapse one-caller wrappers and shrink mutable scope.", steer: "minimize reader load — collapse these passthrough layers.", surfaces: "All surfaces: keeps solo codebases readable months later." },
+      { group: "Core", name: "Outcome-Oriented Execution", slug: "principle-outcome-oriented-execution", rule: "During planned rewrites/migrations, converge directly on the target design without throwaway compat layers.", steer: "apply outcome-oriented execution — cut straight to the target schema.", surfaces: "Solo advantage: no external consumers forcing multi-month shims." },
+      { group: "Core", name: "Experience First", slug: "principle-experience-first", rule: "Choose user delight over implementation convenience; ship fewer polished features over more rough ones.", steer: "apply experience first — optimize for the CLI/UI user flow, not the easiest diff.", surfaces: "CLI ergonomics (--help, error hints) & Web UX polish." },
+      { group: "Core", name: "Exhaust the Design Space", slug: "principle-exhaust-the-design-space", rule: "For novel UX or architecture without precedent, build 2–3 competing prototypes and compare side-by-side.", steer: "exhaust the design space — build two small prototypes behind a toggle.", surfaces: "Web/App layouts, novel CLI UX, or core architecture forks." },
+      { group: "Core", name: "Build the Lever", slug: "principle-build-the-lever", rule: "For repeatable work or verification, build the deterministic script/codemod/CLI instead of doing it by hand.", steer: "build the lever — write a reusable verify-ctl subcommand instead of a throwaway script.", surfaces: "Massive solo multiplier: reusable scripts work in every harness." },
+
+      // Architecture (6)
+      { group: "Architecture", name: "Model the Domain", slug: "principle-model-the-domain", rule: "Encode stateful rules in one explicit structure (state machine, registry, reducer, table) instead of scattered ifs.", steer: "model the domain — replace these scattered flags with a discriminated state union.", surfaces: "Backend job states, Web async UI states, CLI subcommand registries." },
+      { group: "Architecture", name: "Boundary Discipline", slug: "principle-boundary-discipline", rule: "Concentrate validation and error handling at system boundaries; trust internal types and keep core logic pure.", steer: "apply boundary discipline — parse at the route/CLI entry, keep core pure.", surfaces: "CLI arg parsers, HTTP handlers, external API adapters." },
+      { group: "Architecture", name: "Type System Discipline", slug: "principle-type-system-discipline", rule: "Make illegal states unrepresentable, brand semantic primitives, exhaust union variants, derive from schemas.", steer: "apply type system discipline — brand these IDs and make the union exhaustive.", surfaces: "TypeScript, Rust, Go, strict Python across all 3 surfaces." },
+      { group: "Architecture", name: "Make Operations Idempotent", slug: "principle-make-operations-idempotent", rule: "Design commands, migrations, jobs, and loops to converge on the same end state across crashes and retries.", steer: "make this operation idempotent so running it twice yields the exact same state.", surfaces: "CLI setup/deploy commands, backend webhooks/workers, DB seeds." },
+      { group: "Architecture", name: "Migrate Callers Then Delete Legacy APIs", slug: "principle-migrate-callers-then-delete-legacy-apis", rule: "Migrate every caller and delete the old internal API in the same wave instead of preserving legacy paths.", steer: "migrate callers then delete legacy APIs in this same PR.", surfaces: "Stops future agents from copying deprecated endpoints or helpers." },
+      { group: "Architecture", name: "Separate Before Serializing Shared State", slug: "principle-separate-before-serializing-shared-state", rule: "When concurrent actors touch shared state, eliminate sharing first before adding locks or queues.", steer: "separate before serializing shared state — give each run its own temp dir/worktree.", surfaces: "Parallel agent worktrees, isolated test DBs, disposable verify dirs." },
+
+      // Verification (5)
+      { group: "Verification", name: "Prove It Works", slug: "principle-prove-it-works", rule: "Verify against the real artifact (run the CLI, walk the UI, read back stored rows). 'It compiles' never counts.", steer: "apply prove it works — run the real command and show actual output.", surfaces: "CLI stdout/exit code, Backend read-back query, Web ARIA + screenshot." },
+      { group: "Verification", name: "Fix Root Causes", slug: "principle-fix-root-causes", rule: "Trace symptoms back to the first point the system went wrong; guards are only fixes for legitimate states.", steer: "fix root causes — don't add a null check here, find why it became null.", surfaces: "Eliminates defensive band-aids and workaround comments." },
+      { group: "Verification", name: "Sequence Work into Verifiable Units", slug: "principle-sequence-verifiable-units", rule: "Break multi-step work into small atomic units that each end in a runnable check before the next begins.", steer: "sequence work into verifiable units — verify commit 1 before starting commit 2.", surfaces: "Multi-surface changes (schema → backend → CLI/UI)." },
+      { group: "Verification", name: "Test Behavior, Not Implementation", slug: "principle-test-behavior-not-implementation", rule: "Assert externally observable behavior so tests catch real breaks and survive internal refactors.", steer: "test behavior, not implementation — drop the internal mocks and assert the output.", surfaces: "CLI black-box tests, HTTP integration tests, ARIA UI assertions." },
+      { group: "Verification", name: "Explain the Number", slug: "principle-explain-the-number", rule: "Before trusting a measured speedup or latency, name its limiter and rule out measurement artifacts.", steer: "apply explain the number — run /benchmark-checklist before claiming a speedup.", surfaces: "Backend query tuning, CLI cold-start, Web render performance." },
+
+      // Delegation (2)
+      { group: "Delegation", name: "Guard the Context Window", slug: "principle-guard-the-context-window", rule: "Route bulk reading, sweeps, and noisy logs to subagents; keep concise findings in the main thread.", steer: "guard the context window — delegate log/repo scanning to a fresh subagent.", surfaces: "Large monorepos or multi-service solo codebases." },
+      { group: "Delegation", name: "Never Block on the Human", slug: "principle-never-block-on-the-human", rule: "Proceed on reversible decisions and present the result; pause only for irreversible actions.", steer: "never block on the human for reversible choices — proceed and report what you picked.", surfaces: "Keeps solo flow fast across Cursor/Claude/Antigravity/Codex." },
+
+      // Meta (1)
+      { group: "Meta", name: "Encode Lessons in Structure", slug: "principle-encode-lessons-in-structure", rule: "On the second repeat of any correction, encode it as architecture, types, lint, or a script—not more prose.", steer: "encode lessons in structure — turn this into a lint rule instead of an AGENTS.md note.", surfaces: "The compounding flywheel behind Lauren Tan's entire talk." }
+    ];
+
+    const SURFACES = {
+      cli: {
+        label: "CLI Projects",
+        cards: [
+          { title: "1. Directory & Architectural Boundaries", items: [
+            "Split cli/ (arg parsing, exit codes, output formatting) → core/ (pure logic) → io/ (filesystem, process, network).",
+            "Keep business logic completely out of command handlers so core/ is trivially testable without spawning shells."
+          ]},
+          { title: "2. Deterministic Guardrails (Layer 2)", items: [
+            "Schema-validate flags and env vars at the CLI boundary (zod, clap, pydantic).",
+            "Contract tests verifying --help stability, exit codes, and valid JSON output for --format json.",
+            "Lint banning raw console.log / print inside core/."
+          ]},
+          { title: "3. Real Runtime Proof (Layer 3)", items: [
+            "Execute the actual built binary inside a disposable temp directory (NOTES_DATA_DIR=/tmp/...).",
+            "Capture literal command, stdout, stderr, and exit code.",
+            "For mutations, run a second read-only command to verify persisted state."
+          ]},
+          { title: "4. Agent-Friendly Lever Design", items: [
+            "Support --format json and --dry-run on destructive operations.",
+            "Write actionable error messages that name the exact flag or fix.",
+            "Keep subcommands composable and idempotent across retries."
+          ]}
+        ]
+      },
+      backend: {
+        label: "Backend & APIs",
+        cards: [
+          { title: "1. Directory & Architectural Boundaries", items: [
+            "Strict flow: routes/ (HTTP/RPC & auth) → domain/ (pure rules & state machines) → repos/ (DB & external APIs).",
+            "Forbid routes/ from importing raw DB clients directly (prevents scattered queries and auth bypasses)."
+          ]},
+          { title: "2. Deterministic Guardrails (Layer 2)", items: [
+            "Derive types from authoritative schemas (OpenAPI, Zod, SQLc, Prisma, Protobuf).",
+            "Enforce import boundaries via ESLint no-restricted-imports, dependency-cruiser, or Go internal/.",
+            "CI check ensuring migrations apply cleanly and roll forward idempotently."
+          ]},
+          { title: "3. Real Runtime & Formal Proof (Layer 3)", items: [
+            "One-command disposable seeded DB/env + devctl doctor health check.",
+            "Hit real HTTP/RPC routes and read back persisted records via a separate query.",
+            "Apply TLA+ / /statechart selectively to tricky concurrent flows (webhooks, job leases, billing retries)."
+          ]},
+          { title: "4. Agent-Friendly Lever Design", items: [
+            "Ship a tiny devctl CLI (seed, reset, doctor, inspect-job) so every harness runs identical checks.",
+            "Log structured JSON errors with correlation IDs so agents diagnose root causes instead of guessing."
+          ]}
+        ]
+      },
+      web: {
+        label: "Web & App Frontends",
+        cards: [
+          { title: "1. Directory & Architectural Boundaries", items: [
+            "Separate ui/ (pure presentational) vs. features/ (user workflows) vs. client/ (API/store) vs. shared/ (types).",
+            "Restrict footgun hooks/timers (like raw useEffect or setTimeout) to audited primitives."
+          ]},
+          { title: "2. Deterministic Guardrails (Layer 2)", items: [
+            "Strict TS (noUncheckedIndexedAccess, exhaustive switches) + import boundary lint.",
+            "Ban @ts-ignore and workaround comments justifying UI flickers (fix the state model instead).",
+            "Track bundle size & render budgets in CI."
+          ]},
+          { title: "3. Real Runtime Proof (Layer 3)", items: [
+            "Maintain a user-POV Feature Map (docs/verification/features/*.md) with 4 sections: Sub-features, User POV, Driving steps, Gotchas.",
+            "Drive via Playwright/CDP using ARIA roles & accessible names—never brittle CSS selectors.",
+            "Capture ARIA snapshots + before/after screenshots/video and verify mutations survive full page reload."
+          ]},
+          { title: "4. Agent-Friendly Lever Design", items: [
+            "Wrap Playwright/CDP behind a tiny control-<app> CLI (doctor, browser click/fill/snapshot/screenshot) to slash token cost.",
+            "Seed deterministic test users & isolated local state per run ID."
+          ]}
+        ]
+      }
+    };
+
+    const CHECKLIST = [
+      { stage: "Stage 1", text: "Prompt with explicit goal + checkable finish condition + required evidence (no micromanaging steps)." },
+      { stage: "Stage 1", text: "Run read-only /how + /why before editing unfamiliar or tangled code." },
+      { stage: "Stage 2", text: "Audit your last 10 bugs/reverts and encode the top 2–3 repeat mistakes as types or lint rules." },
+      { stage: "Stage 2", text: "Add a canonical AGENTS.md (linked from CLAUDE.md/.cursor/rules) with a Rule → Enforcer table." },
+      { stage: "Stage 3", text: "Create a 1-command disposable local dev launch + doctor check with deterministic seeded data." },
+      { stage: "Stage 3", text: "Write your first user-POV Feature Map covering 3 core flows across CLI / API / UI." },
+      { stage: "Stage 3", text: "Wrap repeated agent verification steps into a tiny reusable verify-ctl script." },
+      { stage: "Stage 4", text: "Run a fresh verifier/second harness on git diff main before merging non-trivial changes." },
+      { stage: "Stage 4", text: "Prune dead legacy code & workaround comments so agents only copy clean patterns." },
+      { stage: "Stage 5", text: "Only after checks reliably catch broken code: run isolated worktrees + TSV decision log + overnight loops." }
+    ];
+
+    // ---------- STATE ----------
+    let activePyramidId = 1;
+    let activeWfStage = "All";
+    let activePrGroup = "All";
+    let activeSurface = "cli";
+    const checkedSet = new Set();
+
+    // ---------- TABS ----------
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabSections = {
+      pyramid: document.getElementById("tab-pyramid"),
+      workflow: document.getElementById("tab-workflow"),
+      principles: document.getElementById("tab-principles"),
+      adapt: document.getElementById("tab-adapt")
+    };
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.tab;
+        tabBtns.forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === target)));
+        Object.entries(tabSections).forEach(([k, el]) => {
+          el.classList.toggle("hidden", k !== target);
+        });
+      });
+    });
+
+    // ---------- TAB 1: PYRAMID ----------
+    function renderPyramid() {
+      const stack = document.getElementById("pyramid-stack");
+      stack.innerHTML = PYRAMID_LAYERS.map(layer => {
+        const active = layer.id === activePyramidId;
+        return `
+          <button
+            type="button"
+            data-layer="${layer.id}"
+            data-active="${active}"
+            style="width: ${layer.width}; border-left: 4px solid ${layer.color};"
+            class="pyramid-layer text-left bg-[var(--content)] border border-[var(--border)] rounded-lg px-3.5 py-2.5 cursor-pointer"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-xs sm:text-sm font-semibold text-[var(--foreground)]">${layer.name}</span>
+              <span class="text-xs text-[var(--muted-foreground)]">${layer.tag}</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      stack.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activePyramidId = Number(btn.dataset.layer);
+          renderPyramid();
+        });
+      });
+
+      const cur = PYRAMID_LAYERS.find(l => l.id === activePyramidId);
+      const detail = document.getElementById("pyramid-detail");
+      detail.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-start justify-between gap-2 pb-3 border-b border-[var(--border)]">
+            <div>
+              <div class="text-xs font-mono" style="color: ${cur.color}">${cur.tag}</div>
+              <h3 class="text-base font-semibold mt-0.5">${cur.name}</h3>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">${cur.summary}</p>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">From Lauren Tan's Talk</div>
+            <ul class="space-y-1.5 text-xs text-[var(--foreground)] list-disc pl-4">
+              ${cur.talkExamples.map(x => `<li>${x}</li>`).join("")}
+            </ul>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">In pstack/</div>
+            <ul class="space-y-1.5 text-xs text-[var(--foreground)] list-disc pl-4">
+              ${cur.pstackLinks.map(x => `<li>${x}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-3 text-xs">
+          <span class="font-semibold" style="color: var(--primary)">Solo Dev Action:</span>
+          <span class="text-[var(--foreground)]"> ${cur.soloAction}</span>
+        </div>
+      `;
+    }
+
+    // ---------- TAB 2: WORKFLOW ----------
+    const WF_STAGES = ["All", ...new Set(WORKFLOW_ITEMS.map(i => i.stage))];
+    const TYPE_COLOR = {
+      "Skill": "var(--chart-1)",
+      "Playbook": "var(--chart-3)",
+      "Subagent": "var(--chart-4)",
+      "Tool + Skill": "var(--chart-2)",
+      "Tool + Playbook": "var(--chart-2)",
+      "Contract": "var(--chart-5)",
+      "Automation": "var(--chart-6)",
+      "CI Script": "var(--success)"
+    };
+
+    function renderWorkflowPills() {
+      const wrap = document.getElementById("wf-pills");
+      wrap.innerHTML = WF_STAGES.map(st => `
+        <button type="button" class="pill-btn px-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] cursor-pointer" aria-pressed="${st === activeWfStage}" data-stage="${st}">
+          ${st}
+        </button>
+      `).join("");
+      wrap.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          activeWfStage = b.dataset.stage;
+          renderWorkflowPills();
+          renderWorkflowGrid();
+        });
+      });
+    }
+
+    function renderWorkflowGrid() {
+      const q = document.getElementById("wf-search").value.trim().toLowerCase();
+      const filtered = WORKFLOW_ITEMS.filter(item => {
+        const matchStage = activeWfStage === "All" || item.stage === activeWfStage;
+        const matchQ = !q || [item.name, item.path, item.desc, item.stage, item.type].some(s => s.toLowerCase().includes(q));
+        return matchStage && matchQ;
+      });
+      const grid = document.getElementById("wf-grid");
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-[var(--muted-foreground)] bg-[var(--card)] border border-[var(--border)] rounded-xl">No matching items.</div>`;
+        return;
+      }
+      grid.innerHTML = filtered.map(item => `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col justify-between gap-2.5">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-mono font-semibold text-[var(--foreground)]">${item.name}</span>
+              <span class="px-2 py-0.5 text-xs rounded-md bg-[var(--content)] border border-[var(--border)] shrink-0" style="color: ${TYPE_COLOR[item.type] || 'var(--foreground)'}">${item.type}</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">${item.desc}</p>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-2 text-xs">
+            <span class="text-[var(--muted-foreground)] truncate" title="${item.stage}">${item.stage}</span>
+            <code class="font-mono text-[var(--code-foreground)] truncate" title="${item.path}">${item.path}</code>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("wf-search").addEventListener("input", renderWorkflowGrid);
+
+    // ---------- TAB 3: PRINCIPLES ----------
+    const PR_GROUPS = ["All", "Core", "Architecture", "Verification", "Delegation", "Meta"];
+    const GROUP_COLOR = {
+      Core: "var(--chart-1)",
+      Architecture: "var(--chart-2)",
+      Verification: "var(--chart-3)",
+      Delegation: "var(--chart-4)",
+      Meta: "var(--chart-5)"
+    };
+
+    function renderPrinciplePills() {
+      const wrap = document.getElementById("pr-pills");
+      wrap.innerHTML = PR_GROUPS.map(g => {
+        const count = g === "All" ? PRINCIPLES.length : PRINCIPLES.filter(p => p.group === g).length;
+        return `
+          <button type="button" class="pill-btn px-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] cursor-pointer" aria-pressed="${g === activePrGroup}" data-group="${g}">
+            ${g} (${count})
+          </button>
+        `;
+      }).join("");
+      wrap.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          activePrGroup = b.dataset.group;
+          renderPrinciplePills();
+          renderPrincipleGrid();
+        });
+      });
+    }
+
+    function renderPrincipleGrid() {
+      const q = document.getElementById("pr-search").value.trim().toLowerCase();
+      const filtered = PRINCIPLES.filter(p => {
+        const matchG = activePrGroup === "All" || p.group === activePrGroup;
+        const matchQ = !q || [p.name, p.slug, p.rule, p.steer, p.surfaces].some(s => s.toLowerCase().includes(q));
+        return matchG && matchQ;
+      });
+      const grid = document.getElementById("pr-grid");
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-[var(--muted-foreground)] bg-[var(--card)] border border-[var(--border)] rounded-xl">No matching principles.</div>`;
+        return;
+      }
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-2.5" style="border-top: 3px solid ${GROUP_COLOR[p.group]}">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-semibold text-[var(--foreground)]">${p.name}</h3>
+              <code class="text-xs font-mono text-[var(--muted-foreground)]">skills/${p.slug}/SKILL.md</code>
+            </div>
+            <span class="px-2 py-0.5 text-xs rounded-md bg-[var(--content)] border border-[var(--border)] shrink-0" style="color: ${GROUP_COLOR[p.group]}">${p.group}</span>
+          </div>
+          <p class="text-xs text-[var(--foreground)] leading-relaxed">${p.rule}</p>
+          <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-2.5 space-y-1 text-xs">
+            <div><span class="font-semibold text-[var(--muted-foreground)]">Steer phrase:</span> <code class="font-mono text-[var(--code-foreground)]">"${p.steer}"</code></div>
+            <div><span class="font-semibold text-[var(--muted-foreground)]">Solo impact:</span> <span class="text-[var(--muted-foreground)]">${p.surfaces}</span></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("pr-search").addEventListener("input", renderPrincipleGrid);
+
+    // ---------- TAB 4: SOLO & MULTI-HARNESS ----------
+    function renderSurfaces() {
+      const pills = document.getElementById("surface-pills");
+      pills.innerHTML = Object.entries(SURFACES).map(([key, val]) => `
+        <button type="button" class="pill-btn px-3 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--content)] text-[var(--foreground)] cursor-pointer" aria-pressed="${key === activeSurface}" data-surface="${key}">
+          ${val.label}
+        </button>
+      `).join("");
+      pills.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          activeSurface = b.dataset.surface;
+          renderSurfaces();
+        });
+      });
+
+      const detail = document.getElementById("surface-detail");
+      detail.innerHTML = SURFACES[activeSurface].cards.map(c => `
+        <div class="bg-[var(--content)] border border-[var(--border)] rounded-lg p-3.5 space-y-1.5">
+          <h3 class="text-xs font-semibold text-[var(--foreground)]">${c.title}</h3>
+          <ul class="space-y-1 text-xs text-[var(--muted-foreground)] list-disc pl-4">
+            ${c.items.map(i => `<li>${i}</li>`).join("")}
+          </ul>
+        </div>
+      `).join("");
+    }
+
+    function renderChecklist() {
+      const container = document.getElementById("checklist-items");
+      container.innerHTML = CHECKLIST.map((item, idx) => {
+        const done = checkedSet.has(idx);
+        return `
+          <label class="flex items-start gap-2.5 p-3 rounded-lg bg-[var(--content)] border border-[var(--border)] cursor-pointer text-xs">
+            <input type="checkbox" data-idx="${idx}" ${done ? "checked" : ""} class="mt-0.5 accent-[var(--primary)] cursor-pointer" />
+            <span class="${done ? "check-done" : ""}">
+              <span class="font-mono font-semibold text-[var(--primary)] mr-1">${item.stage}:</span>
+              ${item.text}
+            </span>
+          </label>
+        `;
+      }).join("");
+
+      container.querySelectorAll("input[type='checkbox']").forEach(cb => {
+        cb.addEventListener("change", () => {
+          const i = Number(cb.dataset.idx);
+          if (cb.checked) checkedSet.add(i);
+          else checkedSet.delete(i);
+          renderChecklist();
+        });
+      });
+
+      const pct = Math.round((checkedSet.size / CHECKLIST.length) * 100);
+      document.getElementById("progress-label").textContent = `${checkedSet.size} / ${CHECKLIST.length} completed (${pct}%)`;
+      document.getElementById("progress-bar").style.width = `${pct}%`;
+    }
+
+    document.getElementById("reset-checks").addEventListener("click", () => {
+      checkedSet.clear();
+      renderChecklist();
+    });
+
+    // ---------- INIT ----------
+    renderPyramid();
+    renderWorkflowPills();
+    renderWorkflowGrid();
+    renderPrinciplePills();
+    renderPrincipleGrid();
+    renderSurfaces();
+    renderChecklist();
+  </script>
+</body>
+</html>
