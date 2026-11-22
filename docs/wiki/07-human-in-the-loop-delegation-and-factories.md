@@ -103,4 +103,4 @@ Notice the elegance of this architecture for a solo builder:
 
 ---
 
-**Previous:** ← [06. Debugging, Design & Scientific Engineering](./06-debugging-design-and-scientific-thinking.md) | **Home:** [Wiki Index](./README.md)
+**Previous:** ← [06. Debugging, Design & Scientific Engineering](./06-debugging-design-and-scientific-thinking.md) | **Next:** [08. Applying the Pyramid to Go (& Other Languages)](./08-golang-and-cross-language-guide.md) →
