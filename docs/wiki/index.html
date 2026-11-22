@@ -64,9 +64,14 @@
     }
     pre code { background: none; padding: 0; font-size: 12.5px; }
     pre.mermaid-block::before {
-      content: "diagram (mermaid)"; display: block; font-size: 11px; color: var(--muted);
+      content: "diagram (mermaid — offline fallback)"; display: block; font-size: 11px; color: var(--muted);
       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
     }
+    .mermaid-box {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 16px; margin: 14px 0; overflow-x: auto; text-align: center;
+    }
+    .mermaid-box svg { max-width: 100%; height: auto; }
     table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; display: block; overflow-x: auto; }
     th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
     th { background: var(--code-bg); font-weight: 600; }
@@ -96,6 +101,7 @@
   </main>
 
   <script src="./wiki-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
     const pages = window.WIKI_PAGES || [];
     const navEl = document.getElementById("nav");
@@ -111,7 +117,12 @@
       document.documentElement.dataset.theme = theme;
       themeBtn.textContent = theme === "dark" ? "Light" : "Dark";
     };
-    themeBtn.onclick = () => { theme = theme === "dark" ? "light" : "dark"; localStorage.setItem("wiki-theme", theme); applyTheme(); };
+    themeBtn.onclick = () => {
+      theme = theme === "dark" ? "light" : "dark";
+      localStorage.setItem("wiki-theme", theme);
+      applyTheme();
+      renderMermaidDiagrams();
+    };
     applyTheme();
 
     const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -130,7 +141,10 @@
       return s.replace(/\x00C(\d+)\x00/g, (_, i) => codes[Number(i)]);
     }
 
+    let mermaidSources = [];
+
     function renderMd(md) {
+      mermaidSources = [];
       const lines = md.replace(/\r\n/g, "\n").split("\n");
       const out = [];
       let i = 0;
@@ -145,8 +159,13 @@
           i++;
           while (i < lines.length && !lines[i].startsWith("```")) buf.push(lines[i++]);
           i++;
-          const cls = lang === "mermaid" ? ' class="mermaid-block"' : "";
-          out.push(`<pre${cls}><code>${esc(buf.join("\n"))}</code></pre>`);
+          const raw = buf.join("\n");
+          if (lang === "mermaid") {
+            const idx = mermaidSources.push(raw) - 1;
+            out.push(`<div class="mermaid-slot" data-m-idx="${idx}"><pre class="mermaid-block"><code>${esc(raw)}</code></pre></div>`);
+          } else {
+            out.push(`<pre><code>${esc(raw)}</code></pre>`);
+          }
           continue;
         }
         // Heading
@@ -196,6 +215,30 @@
       return out.join("\n");
     }
 
+    let renderSeq = 0;
+    async function renderMermaidDiagrams() {
+      if (!window.mermaid || !mermaidSources.length) return;
+      const seq = ++renderSeq;
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: theme === "dark" ? "dark" : "default",
+        securityLevel: "loose"
+      });
+      const slots = contentEl.querySelectorAll(".mermaid-slot");
+      for (const slot of slots) {
+        if (seq !== renderSeq) return;
+        const idx = Number(slot.dataset.mIdx);
+        const src = mermaidSources[idx];
+        try {
+          const { svg } = await window.mermaid.render(`m-${seq}-${idx}`, src);
+          if (seq !== renderSeq) return;
+          slot.innerHTML = `<div class="mermaid-box">${svg}</div>`;
+        } catch (err) {
+          console.error("Mermaid render error:", err);
+        }
+      }
+    }
+
     let currentId = pages[0]?.id || "README.md";
 
     function renderNav() {
@@ -219,6 +262,7 @@
         `<span>${prev ? `<a href="#${prev.id}">← ${esc(prev.title)}</a>` : ""}</span>` +
         `<span>${next ? `<a href="#${next.id}">${esc(next.title)} →</a>` : ""}</span>`;
       renderNav();
+      renderMermaidDiagrams();
       window.scrollTo(0, 0);
     }
 

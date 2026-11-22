@@ -136,11 +136,17 @@ Lauren's answer separates two orthogonal axes that many developers conflate:
 quadrantChart
     title Autonomy Readiness Matrix
     x-axis Low Verifiability --> High Verifiability
-    y-axis Irreversible (One-Way Door) --> Reversible (Two-Way Door)
-    quadrant-1 High Autonomy Safe (UI fixes, refactors, perf, CLI features)
-    quadrant-2 Human Judgment Needed (UX taste, ambiguous product direction)
-    quadrant-3 Always Human-Led (Strategy, breaking public APIs, security policy)
-    quadrant-4 Verify Heavily + Human Merge Gate (DB migrations, billing, auth, deploys)
+    y-axis Irreversible --> Reversible
+    quadrant-1 High Autonomy Safe
+    quadrant-2 Human Judgment Needed
+    quadrant-3 Always Human-Led
+    quadrant-4 Verify + Human Merge Gate
+    UI fixes & refactors: [0.85, 0.85]
+    CLI features & perf: [0.80, 0.72]
+    UX taste & layout: [0.28, 0.78]
+    Product strategy: [0.20, 0.22]
+    DB migrations: [0.76, 0.22]
+    Billing & auth: [0.82, 0.14]
 ```
 
 Notice the critical insight in Quadrant 4: **a passing test suite proves assertions passed; it will not recover dropped production rows.** That is why even in `pstack`'s own autonomy rules (*Never Block on the Human*), irreversible actions—deploys, data deletion, force-pushes to shared branches, external customer messages—**always** require explicit human confirmation.
